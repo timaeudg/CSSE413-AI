@@ -67,6 +67,13 @@ def tinyMazeSearch(problem):
   w = Directions.WEST
   return  [s,s,w,s,w,w,s,w]
 
+def nullHeuristic(state, problem=None):
+  """
+  A heuristic function estimates the cost from the current state to the nearest
+  goal in the provided SearchProblem.  This heuristic is trivial.
+  """
+  return 0
+
 def depthFirstSearch(problem):
   """
   Search the deepest nodes in the search tree first
@@ -86,34 +93,34 @@ def depthFirstSearch(problem):
   "*** YOUR CODE HERE ***"
   return genericGraphSearch(problem, util.Stack())
 
-def genericGraphSearch(problem, openStruct):
+def genericGraphSearch(problem, openStruct, heuristic=nullHeuristic):
   closed = []
   startState = problem.getStartState()
-  openStruct.push((startState, None, None, None))
-
+  if isinstance(openStruct, util.PriorityQueue):
+      openStruct.push((startState, None, 0, None), 0)
+  else:
+      openStruct.push((startState, None, 0, None))
   while not openStruct.isEmpty():
       fullStateInfo = openStruct.pop()
       currentState = fullStateInfo[0]
-      print "Current State:", currentState
       closed.append(currentState)
       if(problem.isGoalState(currentState)):
           actionsToReturn = []
-          print "Solution!:"
           while fullStateInfo[3] is not None:
-              print "Current State: ", currentState
-              print "Actions: ", actionsToReturn
               actionsToReturn.insert(0, fullStateInfo[1])
               fullStateInfo = fullStateInfo[3]
           return actionsToReturn
       successors = problem.getSuccessors(currentState)
-      print "Successors:", successors
       for successor in successors:
           visited = False
-          for location in closed:
-              if location == successor[0]:
-                  visited = True
-          if not visited:
-              openStruct.push((successor[0], successor[1], successor[2], fullStateInfo))
+          if successor[0] not in closed:
+              if isinstance(openStruct, util.PriorityQueue):
+                  heuristicScore = heuristic(successor[0], problem)
+                  costSoFar = successor[2] + fullStateInfo[2]
+                  priority = costSoFar + heuristicScore
+                  openStruct.push((successor[0], successor[1], costSoFar, fullStateInfo), priority)
+              else:
+                  openStruct.push((successor[0], successor[1], successor[2], fullStateInfo))
   #Error here, no solution
   util.raiseNotDefined()
 
@@ -128,47 +135,14 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
   "Search the node of least total cost first. "
   "*** YOUR CODE HERE ***"
-  openStruct = util.PriorityQueue()
-  closed = []
-  startState = problem.getStartState()
-  openStruct.push((startState, None, 0, None), 0)
-
-  while not openStruct.isEmpty():
-      fullStateInfo = openStruct.pop()
-      currentState = fullStateInfo[0]
-      print "Current State:", currentState
-      closed.append(currentState)
-      if(problem.isGoalState(currentState)):
-          actionsToReturn = []
-          print "Solution!:"
-          while fullStateInfo[3] is not None:
-              print "Current State: ", currentState
-              print "Actions: ", actionsToReturn
-              actionsToReturn.insert(0, fullStateInfo[1])
-              fullStateInfo = fullStateInfo[3]
-          return actionsToReturn
-      successors = problem.getSuccessors(currentState)
-      print "Successors:", successors
-      for successor in successors:
-          visited = False
-          for location in closed:
-              if location == successor[0]:
-                  visited = True
-          if not visited:
-              openStruct.push((successor[0], successor[1], successor[2] + fullStateInfo[2], fullStateInfo), successor[2] + fullStateInfo[2])
-  
+  return genericGraphSearch(problem, util.PriorityQueue())
   util.raiseNotDefined()
 
-def nullHeuristic(state, problem=None):
-  """
-  A heuristic function estimates the cost from the current state to the nearest
-  goal in the provided SearchProblem.  This heuristic is trivial.
-  """
-  return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
   "Search the node that has the lowest combined cost and heuristic first."
   "*** YOUR CODE HERE ***"
+  return genericGraphSearch(problem, util.PriorityQueue(), heuristic)
   util.raiseNotDefined()
     
   
