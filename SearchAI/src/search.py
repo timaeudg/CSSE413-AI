@@ -103,9 +103,7 @@ def genericGraphSearch(problem, openStruct, heuristic=nullHeuristic):
       openStruct.push((startState, None, 0, None))
   while not openStruct.isEmpty():
       fullStateInfo = openStruct.pop()
-#      print "Full State: ", fullStateInfo
       currentState = fullStateInfo[0]
-#      print "Current State: ", currentState
       closed.append(currentState)
       if(problem.isGoalState(currentState)):
           actionsToReturn = []
@@ -115,21 +113,17 @@ def genericGraphSearch(problem, openStruct, heuristic=nullHeuristic):
           return actionsToReturn
       successors = problem.getSuccessors(currentState)
       for successor in successors:
-          openSuccessor = (successor[0], successor[1], successor[2], fullStateInfo)
+          openSuccessor = (successor[0], successor[1], successor[2] + fullStateInfo[2], fullStateInfo)
           if successor[0] not in closed:
               inOpen = False
-#              print "Open: ", openStruct.getList()
               for item in openStruct.getList():
                   problemState = item[0]
                   if isinstance(openStruct, PriorityQueue):
                       problemState = item[1][0]
                   if problemState == successor[0]:
                       inOpen = True
-#                      print "In open: ", item[0]
               if not inOpen:
-#                  print "Not in open: ", successor[0]
                   if isinstance(openStruct, PriorityQueue):
-#                      print "Pushed: ", openSuccessor
                       heuristicScore = heuristic(successor[0], problem)
                       costSoFar = successor[2] + fullStateInfo[2]
                       priority = costSoFar + heuristicScore
