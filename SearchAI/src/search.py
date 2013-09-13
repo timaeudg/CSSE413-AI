@@ -12,6 +12,7 @@ by Pacman agents (in searchAgents.py).
 """
 
 import util
+import heapq
 
 class SearchProblem:
   """
@@ -91,18 +92,20 @@ def depthFirstSearch(problem):
   print "Start's actions:", problem.getSuccessors(problem.getStartState())
   """
   "*** YOUR CODE HERE ***"
-  return genericGraphSearch(problem, util.Stack())
+  return genericGraphSearch(problem, Stack())
 
 def genericGraphSearch(problem, openStruct, heuristic=nullHeuristic):
   closed = []
   startState = problem.getStartState()
-  if isinstance(openStruct, util.PriorityQueue):
+  if isinstance(openStruct, PriorityQueue):
       openStruct.push((startState, None, 0, None), 0)
   else:
       openStruct.push((startState, None, 0, None))
   while not openStruct.isEmpty():
       fullStateInfo = openStruct.pop()
+#      print "Full State: ", fullStateInfo
       currentState = fullStateInfo[0]
+#      print "Current State: ", currentState
       closed.append(currentState)
       if(problem.isGoalState(currentState)):
           actionsToReturn = []
@@ -112,15 +115,27 @@ def genericGraphSearch(problem, openStruct, heuristic=nullHeuristic):
           return actionsToReturn
       successors = problem.getSuccessors(currentState)
       for successor in successors:
-          visited = False
+          openSuccessor = (successor[0], successor[1], successor[2], fullStateInfo)
           if successor[0] not in closed:
-              if isinstance(openStruct, util.PriorityQueue):
-                  heuristicScore = heuristic(successor[0], problem)
-                  costSoFar = successor[2] + fullStateInfo[2]
-                  priority = costSoFar + heuristicScore
-                  openStruct.push((successor[0], successor[1], costSoFar, fullStateInfo), priority)
-              else:
-                  openStruct.push((successor[0], successor[1], successor[2], fullStateInfo))
+              inOpen = False
+#              print "Open: ", openStruct.getList()
+              for item in openStruct.getList():
+                  problemState = item[0]
+                  if isinstance(openStruct, PriorityQueue):
+                      problemState = item[1][0]
+                  if problemState == successor[0]:
+                      inOpen = True
+#                      print "In open: ", item[0]
+              if not inOpen:
+#                  print "Not in open: ", successor[0]
+                  if isinstance(openStruct, PriorityQueue):
+#                      print "Pushed: ", openSuccessor
+                      heuristicScore = heuristic(successor[0], problem)
+                      costSoFar = successor[2] + fullStateInfo[2]
+                      priority = costSoFar + heuristicScore
+                      openStruct.push(openSuccessor, priority)
+                  else:
+                      openStruct.push(openSuccessor)
   #Error here, no solution
   util.raiseNotDefined()
 
@@ -130,22 +145,92 @@ def breadthFirstSearch(problem):
   [2nd Edition: p 73, 3rd Edition: p 82]
   """
   "*** YOUR CODE HERE ***"
-  return genericGraphSearch(problem, util.Queue())
+  return genericGraphSearch(problem, Queue())
       
 def uniformCostSearch(problem):
   "Search the node of least total cost first. "
   "*** YOUR CODE HERE ***"
-  return genericGraphSearch(problem, util.PriorityQueue())
+  return genericGraphSearch(problem, PriorityQueue())
   util.raiseNotDefined()
 
 
 def aStarSearch(problem, heuristic=nullHeuristic):
   "Search the node that has the lowest combined cost and heuristic first."
   "*** YOUR CODE HERE ***"
-  return genericGraphSearch(problem, util.PriorityQueue(), heuristic)
+  return genericGraphSearch(problem, PriorityQueue(), heuristic)
   util.raiseNotDefined()
     
+class Stack:
+  "A container with a last-in-first-out (LIFO) queuing policy."
+  def __init__(self):
+    self.list = []
+    
+  def push(self,item):
+    "Push 'item' onto the stack"
+    self.list.append(item)
+
+  def pop(self):
+    "Pop the most recently pushed item from the stack"
+    return self.list.pop()
+
+  def isEmpty(self):
+    "Returns true if the stack is empty"
+    return len(self.list) == 0
+
+  def getList(self):
+    return self.list 
   
+class Queue:
+  "A container with a first-in-first-out (FIFO) queuing policy."
+  def __init__(self):
+    self.list = []
+  
+  def push(self,item):
+    "Enqueue the 'item' into the queue"
+    self.list.insert(0,item)
+
+  def pop(self):
+    """
+      Dequeue the earliest enqueued item still in the queue. This
+      operation removes the item from the queue.
+    """
+    return self.list.pop()
+
+  def isEmpty(self):
+    "Returns true if the queue is empty"
+    return len(self.list) == 0
+
+  def getList(self):
+    return self.list
+
+class PriorityQueue:
+  """
+    Implements a priority queue data structure. Each inserted item
+    has a priority associated with it and the client is usually interested
+    in quick retrieval of the lowest-priority item in the queue. This
+    data structure allows O(1) access to the lowest-priority item.
+    
+    Note that this PriorityQueue does not allow you to change the priority
+    of an item.  However, you may insert the same item multiple times with
+    different priorities.
+  """  
+  def  __init__(self):  
+    self.heap = []
+    
+  def push(self, item, priority):
+      pair = (priority,item)
+      heapq.heappush(self.heap,pair)
+
+  def pop(self):
+      (priority,item) = heapq.heappop(self.heap)
+      return item
+  
+  def isEmpty(self):
+    return len(self.heap) == 0
+
+  def getList(self):
+    return self.heap
+
 # Abbreviations
 bfs = breadthFirstSearch
 dfs = depthFirstSearch

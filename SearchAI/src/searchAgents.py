@@ -309,10 +309,10 @@ class CornersProblem(search.SearchProblem):
       nextx, nexty = int(x + dx), int(y + dy)
       hitsWall = self.walls[nextx][nexty]
       if not hitsWall:
-          BottomLeft = (state[0] == self.corners[0]) or state[1] 
-          TopLeft = (state[0] == self.corners[1]) or state[2]
-          BottomRight = (state[0] == self.corners[2]) or state[3]
-          TopRight = (state[0] == self.corners[3]) or state[4]
+          BottomLeft = ((nextx, nexty) == self.corners[0]) or state[1] 
+          TopLeft = ((nextx, nexty) == self.corners[1]) or state[2]
+          BottomRight = ((nextx, nexty) == self.corners[2]) or state[3]
+          TopRight = ((nextx, nexty) == self.corners[3]) or state[4]
           nextState = ((nextx, nexty), BottomLeft, TopLeft, BottomRight, TopRight)
           successor = (nextState, action, 1)
           successors.append(successor)
@@ -345,6 +345,11 @@ def cornersHeuristic(state, problem):
   This function should always return a number that is a lower bound
   on the shortest path from the state to a goal of the problem; i.e.
   it should be admissible (as well as consistent).
+  """
+  """
+  Calculate the minimal spanning tree by looking at the manhattan distances between each corner and find the 
+  combination/order that results in the smallest total cost with pacman in it, then make the heuristic guide pacman
+  Might want to do the spanning tree calculation in init
   """
   corners = problem.corners # These are the corner coordinates
   walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
