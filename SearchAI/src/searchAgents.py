@@ -374,6 +374,15 @@ def manhattanDistance(start, end):
   "The Manhattan distance heuristic for a PositionSearchProblem"
   return abs(end[0] - start[0]) + abs(start[1] - end[1])
 
+def euclideanDistance(start, end):
+  "The Euclidean distance heuristic for a PositionSearchProblem"
+  return ( (start[0] - end[0]) ** 2 + (start[1] - end[1]) ** 2 ) ** 0.5
+
+def chebyshevDistance(start, end):
+    dx = abs(start[0] - end[0])
+    dy = abs(start[1] - end[1])
+    return max(dx, dy)
+
 class AStarCornersAgent(SearchAgent):
   "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
   def __init__(self):
@@ -462,9 +471,9 @@ def foodHeuristic(state, problem):
   Subsequent calls to this heuristic can access problem.heuristicInfo['wallCount']
   """
   position, foodGrid = state
-  "*** YOUR CODE HERE ***"
-  return 0
-  
+  foodList = foodGrid.asList()
+  return len(foodList)
+
 class ClosestDotSearchAgent(SearchAgent):
   "Search for all food using a sequence of searches"
   def registerInitialState(self, state):
@@ -489,9 +498,22 @@ class ClosestDotSearchAgent(SearchAgent):
     food = gameState.getFood()
     walls = gameState.getWalls()
     problem = AnyFoodSearchProblem(gameState)
-
-    "*** YOUR CODE HERE ***"
+    return search.aStarSearch(problem, closestFoodHeuristic)
+    
     util.raiseNotDefined()
+    
+    
+def closestFoodHeuristic(state, problem):
+    food = problem.food.asList()
+    distance = 999999
+    for piece in food:
+        mDist = manhattanDistance(piece, state)
+        if mDist < distance:
+            distance = mDist
+    if len(food) == 0:
+        return 0
+    else:
+        return distance
   
 class AnyFoodSearchProblem(PositionSearchProblem):
   """
@@ -525,7 +547,14 @@ class AnyFoodSearchProblem(PositionSearchProblem):
     that will complete the problem definition.
     """
     x,y = state
-    
+    foodList = self.food.asList()
+    for food in foodList:
+        if state == food:
+            return True
+    if len(foodList) == 0:
+        return True
+    else:
+        return False
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
 
