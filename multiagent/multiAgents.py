@@ -290,6 +290,55 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
   """
     Your expectimax agent (question 4)
   """
+  
+  def expectiMax(self, gameState, iteration, agentsLeft, evalFunction):
+    "Iteration is the number of cycles for the agents we need to do still, agents left are the # of agents in the cycle"
+    if iteration == 0 and agentsLeft == 0:
+      value = evalFunction(gameState)
+      return value, None
+    else:
+      newIteration = None
+      newAgentsLeft = None
+      if agentsLeft == 0:
+        newIteration = iteration - 1
+        newAgentsLeft = gameState.getNumAgents()
+      else:
+        newIteration = iteration
+        newAgentsLeft = agentsLeft
+      agentIndex = gameState.getNumAgents() - newAgentsLeft
+      agentActions = gameState.getLegalActions(agentIndex)
+      if agentIndex != 0:
+        if len(agentActions) != 0:
+          tempAgentActions = []
+          tempAgentActions.append(agentActions[random.randrange(0, len(agentActions))])
+          agentActions = tempAgentActions
+          
+      bestAction = None
+      bestValue = None
+      values = []
+      for action in agentActions:
+        if action is Directions.STOP and agentIndex == 0:
+          continue
+        if bestAction is None:
+          bestAction = action
+        successor = gameState.generateSuccessor(agentIndex, action)
+        value, minMaxAction = self.expectiMax(successor, newIteration, newAgentsLeft - 1, evalFunction)
+        values.append((value, minMaxAction))
+        if bestValue is None:
+          bestValue = value
+        elif agentIndex == 0 and value > bestValue:
+          bestValue = value
+          bestAction = action
+        elif value < bestValue and agentIndex != 0:
+          bestValue = value
+          bestAction = action
+          
+      if bestAction is None or bestValue is None:
+        bestValue = evalFunction(gameState)
+        return bestValue, bestAction
+      #if agentIndex != 0:
+        #return values[random.randrange(0, len(values))]
+      return bestValue, bestAction
 
   def getAction(self, gameState):
     """
@@ -299,7 +348,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       legal moves.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    value, action = self.expectiMax(gameState, self.depth, 0, self.evaluationFunction)
+    return action
 
 def betterEvaluationFunction(currentGameState):
   """
