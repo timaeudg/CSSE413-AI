@@ -241,15 +241,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           bestAction = action
         successor = gameState.generateSuccessor(agentIndex, action)
         if passedGreater is not None and agentIndex == 0:
-          if bestValue is None:
-            passedGreater = greater
-          else:
-            passedGreater = max(greater, bestValue)
+          if bestValue is not None:
+            passedGreater = max(passedGreater, bestValue)
         if passedLess is not None and agentIndex != 0:
-          if bestValue is None:
-            passedLess = less
-          else:
-            passedLess = min(less, bestValue)
+          if bestValue is not None:
+            passedLess = min(passedLess, bestValue)
         
         value, minMaxAction = self.alphaBeta(successor, newIteration, newAgentsLeft - 1, evalFunction, passedGreater, passedLess)
 
@@ -263,12 +259,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           bestAction = action
         
         if agentIndex == 0:
-          if passedGreater is None or value > passedGreater:
+          if passedGreater is None or bestValue > passedGreater:
             passedGreater = bestValue
           if bestValue > passedLess and passedLess is not None:
             return bestValue, bestAction
         else:
-          if passedLess is None or value < passedLess:
+          if passedLess is None or bestValue < passedLess:
             passedLess = bestValue
           if bestValue < passedGreater and passedGreater is not None:
             return bestValue, bestAction
@@ -306,18 +302,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         newIteration = iteration
         newAgentsLeft = agentsLeft
       agentIndex = gameState.getNumAgents() - newAgentsLeft
-      agentActions = gameState.getLegalActions(agentIndex)
-      if agentIndex != 0:
-        if len(agentActions) != 0:
-          tempAgentActions = []
-          tempAgentActions.append(agentActions[random.randrange(0, len(agentActions))])
-          agentActions = tempAgentActions
-          
+      agentActions = gameState.getLegalActions(agentIndex)          
       bestAction = None
       bestValue = None
       values = []
       for action in agentActions:
-        if action is Directions.STOP and agentIndex == 0:
+        if action == Directions.STOP and agentIndex == 0:
           continue
         if bestAction is None:
           bestAction = action
@@ -336,8 +326,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       if bestAction is None or bestValue is None:
         bestValue = evalFunction(gameState)
         return bestValue, bestAction
-      #if agentIndex != 0:
-        #return values[random.randrange(0, len(values))]
+      if agentIndex != 0:
+        total = 0
+        for tuple in values:
+#          print tuple[0]
+          total += tuple[0]
+#          print "Total: ", total
+        return total / len(values), bestAction
       return bestValue, bestAction
 
   def getAction(self, gameState):
@@ -359,8 +354,32 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
   """
   "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
+  foodGrid = currentGameState.getFood()
+  currentPos = currentGameState.getPacmanPosition()
+  #print "Food Length: ", foodGrid.height
+  #print "Food Row Length: ", foodGrid.width
+  maximumPossibleManhattanDistance = foodGrid.height + foodGrid.width
+  if len(foodGrid.asList()) == 0:
+    foodLeftScore = 9999
+  else:
+    foodLeftScore = 1.0/(maximumPossibleManhattanDistance * len(foodGrid.asList()))
+  foodDistanceScore = 0
+  minDistance = maximumPossibleManhattanDistance
+  for food in foodGrid.asList():
+    distance = euclideanDistance(currentPos, food)
+    if distance < minDistance:
+      minDistance = distance
+  foodDistanceScore = 1.0/(minDistance)
+#  scaredGhostsScore = 0.0
+#  newScaredTimes = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+#  for scaredTime in newScaredTimes:
+#    scaredGhostScore += scaredTime
+  return currentGameState.getScore() + 2*foodLeftScore + 2*foodDistanceScore
 
+def euclideanDistance(start, end):
+  "The Euclidean distance heuristic for a PositionSearchProblem"
+  return ( (start[0] - end[0]) ** 2 + (start[1] - end[1]) ** 2 ) ** 0.5
+  
 # Abbreviation
 better = betterEvaluationFunction
 
